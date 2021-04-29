@@ -43,6 +43,10 @@ class TestExample(DbTest):
         )
 
         sql = """
+        SELECT COUNT(subordinates.customer_organization_id) AS subordinates_count, orgs.id
+        FROM organizations orgs
+        LEFT JOIN enterprise_sales_enterprise_customers subordinates ON orgs.id = subordinates.sales_organization_id
+        GROUP BY orgs.id ORDER BY orgs.id ASC;
         """
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql)
@@ -88,6 +92,8 @@ class TestExample(DbTest):
         )
 
         sql = """
+        SELECT id, ST_X(ST_Centroid(bounds)) AS longitude, 
+       ST_Y(ST_Centroid(bounds)) AS latitude FROM japan_segments ORDER BY NULLIF(regexp_replace(id, '\\D', '', 'g'), '')::int;
         """
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql)
@@ -155,6 +161,46 @@ class TestExample(DbTest):
         )
 
         sql = """
+        SELECT id 
+FROM japan_segments jps
+WHERE ST_Within(
+    jps.bounds,
+    ST_SetSRID(ST_GeomFromGeoJSON('{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              130.27313232421875,
+              30.519681272749402
+            ],
+            [
+              131.02020263671875,
+              30.519681272749402
+            ],
+            [
+              131.02020263671875,
+              30.80909017893796
+            ],
+            [
+              130.27313232421875,
+              30.80909017893796
+            ],
+            [
+              130.27313232421875,
+              30.519681272749402
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}'::json->'features'->0->'geometry'),4326));
         """
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(sql)
